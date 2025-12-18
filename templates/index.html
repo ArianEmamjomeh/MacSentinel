@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mac Sentinel - Anti-Theft Alarm</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body>
+    <div class="container">
+        <h1>Mac Sentinel</h1>
+        <div class="status" id="status">Disarmed</div>
+        <div class="buttons">
+            <button id="armBtn" onclick="arm()">ARM</button>
+            <button id="stopBtn" onclick="stop()">STOP</button>
+        </div>
+    </div>
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>     
+</body>
+</html>
