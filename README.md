@@ -7,8 +7,8 @@ A macOS security web application that detects and alarms when a MacBook's lid be
 - **Automatic Alarm** - Plays loud alarm when lid closes while armed
 - **Sleep Prevention** - Keeps system awake while armed
 - **Volume Control** - Automatically sets volume to maximum when alarm triggers
-- **Web Interface** - Simple web UI for ARM/STOP controls
-- **Deployable** - Can run locally or on a network
+- **Web Interface** - Simple local web UI for ARM/STOP controls
+- **Local Only** - Runs on localhost for security
 
 ## Requirements
 
@@ -53,18 +53,6 @@ You can download a free alarm sound from [freesound.org](https://freesound.org) 
 
 ### 1. Start the Server
 
-**For local use only:**
-```bash
-python app.py
-```
-
-**For network access (deployment):**
-```bash
-# Edit app.py and change the last line to:
-app.run(debug=False, host='0.0.0.0', port=5000)
-```
-
-Then start:
 ```bash
 python app.py
 ```
@@ -72,14 +60,18 @@ python app.py
 You should see:
 ```
  * Running on http://127.0.0.1:5000
- * Debug mode: on/off
+ * Debug mode: on
 ```
 
 ### 2. Open the Web Interface
 
-**Local access:**
+Open your browser and navigate to:
 ```
 http://127.0.0.1:5000
+```
+or
+```
+http://localhost:5000
 ```
 
 
@@ -91,7 +83,22 @@ http://127.0.0.1:5000
    - Begin monitoring for lid close events
    - Status will change to "ARMED" (red)
 
+### 4. Test the Alarm
 
+You can test the alarm in two ways:
+
+**Option A: Manual Test (Recommended for first test)**
+- Open browser console (F12) or use terminal:
+  ```bash
+  curl -X POST http://127.0.0.1:5000/api/test-alarm
+  ```
+- The alarm should start playing immediately
+
+**Option B: Real Test**
+- Make sure system is **ARMED** (status shows "ARMED")
+- Close your MacBook lid
+- The alarm should trigger automatically
+- Open lid and click **STOP** to disarm
 
 ### 5. Stop/Disarm
 
@@ -145,69 +152,65 @@ http://127.0.0.1:5000
   app.run(debug=True, host='127.0.0.1', port=5001)  # Change to 5001
   ```
 
-## Deployment
+## Testing Checklist
 
-### Local Development (Default)
+Follow these steps to verify everything works:
 
-By default, the app runs on `127.0.0.1` (localhost only) for security during development.
+### ✅ Pre-Test Checks
 
-### Network Deployment
-
-To deploy on your local network:
-
-1. **Update `app.py`** - Change the last line:
-   ```python
-   # Change from:
-   app.run(debug=True, host='127.0.0.1', port=5000)
-   
-   # To:
-   app.run(debug=False, host='0.0.0.0', port=5000)
-   ```
-
-2. **Find your Mac's IP address:**
+1. **Verify alarm file exists:**
    ```bash
-   ifconfig | grep "inet " | grep -v 127.0.0.1
+   ls static/sounds/alarm.mp3
    ```
 
-3. **Access from other devices:**
+2. **Test alarm sound manually:**
+   ```bash
+   afplay static/sounds/alarm.mp3
    ```
-   http://<your-mac-ip>:5000
+   (Press Ctrl+C to stop)
+
+3. **Check pmset works:**
+   ```bash
+   pmset -g log | tail -5
    ```
 
-### Production Deployment Options
+### ✅ Test 1: Manual Alarm Trigger
 
-**Option 1: Using Gunicorn (Recommended)**
-```bash
-pip install gunicorn
-gunicorn -w 4 -b 0.0.0.0:5000 app:app
-```
+1. Start server: `python app.py`
+2. Open browser: `http://127.0.0.1:5000`
+3. Click **ARM** button
+4. Check terminal for:
+   - "Caffeinate started"
+   - "Power monitoring started"
+5. Test alarm manually:
+   ```bash
+   curl -X POST http://127.0.0.1:5000/api/test-alarm
+   ```
+6. Alarm should play - verify volume is at 100%
+7. Click **STOP** button
+8. Alarm should stop
 
-**Option 2: Using systemd (Auto-start on boot)**
-Create a service file to run the app automatically.
+### ✅ Test 2: Real Lid Close Detection
 
-**Option 3: Using a reverse proxy (nginx)**
-Set up nginx to proxy requests to the Flask app.
+1. Make sure server is running and system is **ARMED**
+2. Check terminal shows "Power monitoring started"
+3. **Carefully** close your MacBook lid (don't fully close - just enough to trigger sensor)
+4. Watch terminal - should see "LID CLOSE DETECTED"
+5. Alarm should trigger automatically
+6. Open lid
+7. Click **STOP** to disarm
 
-### Security Considerations
+### ✅ Test 3: Sleep Prevention
 
-⚠️ **Important Security Notes:**
+1. ARM the system
+2. Check caffeinate is running:
+   ```bash
+   ps aux | grep caffeinate
+   ```
+3. Wait 1-2 minutes - system should NOT sleep
+4. STOP the system
+5. System should be able to sleep normally again
 
-- **Add Authentication**: The current version has no authentication. Anyone with network access can ARM/STOP the system.
-- **Use HTTPS**: If deploying over the internet, use HTTPS (via nginx with Let's Encrypt).
-- **Firewall**: Consider restricting access to specific IP addresses.
-- **Password Protection**: Consider adding basic auth or a password system before deploying publicly.
+## Security Note
 
-**Recommended for production:**
-- Add authentication (Flask-Login, Flask-HTTPAuth, or similar)
-- Use a production WSGI server (Gunicorn, uWSGI)
-- Set up HTTPS/SSL
-- Configure firewall rules
-- Use environment variables for sensitive config
-
-## License
-
-[Add your license here]
-
-## Contributing
-
-[Add contribution guidelines if needed]
+This app runs on `localhost` (127.0.0.1) only and is not accessible from other devices. This is intentional for security - the app controls your Mac's hardware and should only be accessible locally. 
