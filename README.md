@@ -15,6 +15,7 @@ A macOS security web application that detects and alarms when a MacBook's lid be
 - **macOS** (Apple Silicon or Intel)
 - **Python 3.7+**
 - **Alarm sound file** (`static/sounds/alarm.mp3`)
+- **Amphetamine** (Required for audio playback with lid closed) - [Download from Mac App Store](https://apps.apple.com/app/amphetamine/id937984704)
 
 ## Installation
 
@@ -48,6 +49,27 @@ static/sounds/alarm.mp3
 Supported formats: `.mp3`, `.wav`, `.aiff`, `.m4a`
 
 You can download a free alarm sound from [freesound.org](https://freesound.org) or use any audio file.
+
+### 5. Install and Configure Amphetamine (Required for Audio with Lid Closed)
+
+⚠️ **Important**: macOS disables built-in speakers when the lid closes. To enable audio playback with the lid closed, you need Amphetamine.
+
+1. **Install Amphetamine:**
+   - Download from the [Mac App Store](https://apps.apple.com/app/amphetamine/id937984704)
+   - Launch Amphetamine (a pill icon will appear in your menu bar)
+
+2. **Configure Amphetamine:**
+   - Click the Amphetamine icon in the menu bar
+   - Select **"Quick Preferences"** or **"Preferences"**
+   - **Uncheck** "Allow system sleep when display is closed"
+   - Start a session by clicking the icon and selecting **"Indefinitely"** or set a specific duration
+
+3. **Verify Setup:**
+   - With Amphetamine running, close your MacBook lid
+   - Audio should continue to play (test with any audio file)
+   - If audio stops, check Amphetamine settings
+
+**Note**: Without Amphetamine, the alarm will trigger but audio will only play when the lid is reopened.
 
 ## Usage
 
@@ -83,7 +105,14 @@ http://127.0.0.1:5000
 ```
 
 
-### 3. Arm the System
+### 3. Start Amphetamine
+
+**Before arming the system**, make sure Amphetamine is running:
+1. Check the menu bar for the Amphetamine icon (pill shape)
+2. If not running, launch Amphetamine and start a session
+3. Verify "Allow system sleep when display is closed" is **unchecked** in preferences
+
+### 4. Arm the System
 
 1. Click the **ARM** button
 2. The system will:
@@ -93,7 +122,7 @@ http://127.0.0.1:5000
 
 
 
-### 5. Stop/Disarm
+### 6. Stop/Disarm
 
 1. Click the **STOP** button
 2. The system will:
@@ -127,10 +156,12 @@ http://127.0.0.1:5000
 
 ### Alarm sound doesn't play
 
+- **Make sure Amphetamine is running** and configured correctly (see Installation step 5)
 - Verify alarm file exists and is readable
 - Check file format (should be `.mp3`, `.wav`, `.aiff`, or `.m4a`)
 - Test manually: `afplay static/sounds/alarm.mp3`
 - Check volume isn't muted
+- If lid is closed: Test that audio plays with lid closed (Amphetamine must be active)
 
 ### System still sleeps when armed
 
