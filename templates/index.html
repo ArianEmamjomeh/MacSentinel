@@ -6,15 +6,39 @@
     <title>Mac Sentinel - Anti-Theft Alarm</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
-
 <body>
     <div class="container">
         <h1>Mac Sentinel</h1>
-        <div class="status" id="status">Disarmed</div>
-        <div class="buttons">
-            <button id="armBtn" onclick="arm()">ARM</button>
-            <button id="stopBtn" onclick="stop()">STOP</button>
-            <button id="testBtn" onclick="testAlarm()" style="margin-top: 10px; background-color: #666;">TEST ALARM</button>
+        
+        <div class="description">
+            <p class="subtitle">Lid Closure Alarm System</p>
+            <p class="info">Automatically triggers an alarm when your MacBook lid is closed while the system is armed.</p>
+        </div>
+
+        <div class="usage">
+            <h3>How to Use</h3>
+            <ol>
+                <li>Ensure <strong>Amphetamine</strong> is running (required for audio with lid closed)</li>
+                <li>Toggle the switch below to <strong>ARM</strong> the system</li>
+                <li>Close your MacBook lid to trigger the alarm</li>
+                <li>Toggle to <strong>DISARM</strong> to stop monitoring</li>
+            </ol>
+        </div>
+
+        <div class="control-section">
+            <div class="segmented-control" id="toggleContainer">
+                <div class="segment-option active" id="disarmOption" onclick="disarm()">
+                    DISARM
+                </div>
+                <div class="segment-option" id="armOption" onclick="arm()">
+                    ARM
+                </div>
+            </div>
+            
+            <div class="status-indicator" id="statusIndicator">
+                <div class="indicator-dot" id="indicatorDot"></div>
+                <span class="indicator-text" id="indicatorText">DISARMED</span>
+            </div>
         </div>
     </div>
     <script src="{{ url_for('static', filename='js/app.js') }}"></script>     

@@ -6,85 +6,232 @@
 
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: #000000;
     min-height: 100vh;
     display: flex;
     justify-content: center;
     align-items: center;
+    color: #ffffff;
+    padding: 2rem;
 }
 
 .container {
-    background: white;
-    padding: 3rem;
-    border-radius: 20px;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    max-width: 600px;
+    width: 100%;
     text-align: center;
-    min-width: 400px;
 }
 
 h1 {
-    color: #333;
-    margin-bottom: 2rem;
-    font-size: 2.5rem;
+    font-size: 3rem;
+    font-weight: 300;
+    letter-spacing: 0.1em;
+    margin-bottom: 1rem;
+    color: #ffffff;
 }
 
-.status {
-    font-size: 1.5rem;
-    font-weight: bold;
-    padding: 1rem;
-    margin-bottom: 2rem;
-    border-radius: 10px;
-    background: #f0f0f0;
-    color: #666;
+.description {
+    margin-bottom: 3rem;
 }
 
-.status.armed {
-    background: #ff4444;
-    color: white;
-}
-
-.status.disarmed {
-    background: #44ff44;
-    color: white;
-}
-
-.buttons {
-    display: flex;
-    gap: 1rem;
-    justify-content: center;
-}
-
-button {
-    padding: 1rem 2rem;
+.subtitle {
     font-size: 1.2rem;
-    font-weight: bold;
-    border: none;
-    border-radius: 10px;
+    color: #888888;
+    margin-bottom: 1rem;
+    font-weight: 300;
+}
+
+.info {
+    font-size: 1rem;
+    color: #aaaaaa;
+    line-height: 1.6;
+    max-width: 500px;
+    margin: 0 auto;
+}
+
+.usage {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    padding: 2rem;
+    margin-bottom: 4rem;
+    text-align: left;
+    backdrop-filter: blur(10px);
+}
+
+.usage h3 {
+    font-size: 1.1rem;
+    font-weight: 500;
+    margin-bottom: 1rem;
+    color: #ffffff;
+}
+
+.usage ol {
+    padding-left: 1.5rem;
+    color: #cccccc;
+    line-height: 2;
+}
+
+.usage li {
+    margin-bottom: 0.5rem;
+}
+
+.usage strong {
+    color: #ffffff;
+    font-weight: 500;
+}
+
+.control-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2rem;
+}
+
+.segmented-control {
+    display: flex;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 12px;
+    padding: 4px;
+    gap: 4px;
+    width: fit-content;
+    margin: 0 auto;
+}
+
+.segment-option {
+    padding: 12px 32px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    color: #888888;
     cursor: pointer;
+    user-select: none;
+    border-radius: 8px;
+    transition: all 0.15s ease; /* Faster transition */
+    position: relative;
+    text-transform: uppercase;
+    will-change: transform, background-color, color; /* Optimize for animations */
+}
+
+.segment-option:hover {
+    color: #aaaaaa;
+}
+
+.segment-option.active {
+    background: #2a2a2a;
+    color: #ffffff;
+    font-weight: 600;
+    /* Neumorphic effect - raised appearance */
+    box-shadow: 
+        inset -2px -2px 4px rgba(255, 255, 255, 0.05),
+        inset 2px 2px 4px rgba(0, 0, 0, 0.3),
+        0 2px 4px rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transform: translateZ(0); /* Force hardware acceleration */
+}
+
+.segment-option.active::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-radius: 8px;
+    background: linear-gradient(
+        135deg,
+        rgba(255, 255, 255, 0.1) 0%,
+        rgba(255, 255, 255, 0.05) 50%,
+        rgba(0, 0, 0, 0.1) 100%
+    );
+    pointer-events: none;
+}
+
+.segment-option:active {
+    transform: scale(0.98);
+}
+
+.status-indicator {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 2rem;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 50px;
+    backdrop-filter: blur(10px);
+}
+
+.indicator-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
     transition: all 0.3s;
-    min-width: 120px;
+    box-shadow: 0 0 10px currentColor;
 }
 
-#armBtn {
-    background: #4CAF50;
-    color: white;
+.status-indicator.armed .indicator-dot {
+    background: #ff4444;
+    color: #ff4444;
+    animation: pulse-red 2s infinite;
 }
 
-#armBtn:hover {
-    background: #45a049;
-    transform: scale(1.05);
+.status-indicator.disarmed .indicator-dot {
+    background: #44ff44;
+    color: #44ff44;
+    animation: pulse-green 2s infinite;
 }
 
-#stopBtn {
-    background: #f44336;
-    color: white;
+.indicator-text {
+    font-size: 0.9rem;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    color: #ffffff;
 }
 
-#stopBtn:hover {
-    background: #da190b;
-    transform: scale(1.05);
+@keyframes pulse-red {
+    0%, 100% {
+        opacity: 1;
+        box-shadow: 0 0 10px #ff4444, 0 0 20px #ff4444;
+    }
+    50% {
+        opacity: 0.7;
+        box-shadow: 0 0 15px #ff4444, 0 0 30px #ff4444;
+    }
 }
 
-button:active {
+@keyframes pulse-green {
+    0%, 100% {
+        opacity: 1;
+        box-shadow: 0 0 10px #44ff44, 0 0 20px #44ff44;
+    }
+    50% {
+        opacity: 0.7;
+        box-shadow: 0 0 15px #44ff44, 0 0 30px #44ff44;
+    }
+}
+
+.toggle-container:active .toggle-handle {
     transform: scale(0.95);
+}
+
+@media (max-width: 600px) {
+    h1 {
+        font-size: 2rem;
+    }
+    
+    .glassy-toggle {
+        width: 160px;
+        height: 80px;
+    }
+    
+    .toggle-handle {
+        width: 60px;
+        height: 60px;
+        top: 10px;
+    }
+    
+    .glassy-toggle.armed .toggle-handle {
+        left: calc(100% - 70px);
+    }
 }

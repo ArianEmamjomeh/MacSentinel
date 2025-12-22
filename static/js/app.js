@@ -3,25 +3,45 @@ function updateStatus() {
     fetch('/api/status')
     .then(response => response.json())
     .then(data => {
-        const statusElement = document.getElementById('status');
-        if (data.armed) {
-            statusElement.textContent = 'ARMED';
-            statusElement.className = 'status armed';
-        } else {
-            statusElement.textContent = 'DISARMED';
-            statusElement.className = 'status disarmed';
-        }
+        updateUI(data.armed);
     })
     .catch(error => {
-        console.error('Error Fetching status:', error);
+        console.error('Error fetching status:', error);
     });
+}
+
+// function to update UI based on armed state
+function updateUI(armed) {
+    const armOption = document.getElementById('armOption');
+    const disarmOption = document.getElementById('disarmOption');
+    const statusIndicator = document.getElementById('statusIndicator');
+    const indicatorDot = document.getElementById('indicatorDot');
+    const indicatorText = document.getElementById('indicatorText');
+    
+    if (armed) {
+        // ARM is active
+        armOption.classList.add('active');
+        disarmOption.classList.remove('active');
+        statusIndicator.classList.remove('disarmed');
+        statusIndicator.classList.add('armed');
+        indicatorText.textContent = 'ARMED';
+    } else {
+        // DISARM is active
+        disarmOption.classList.add('active');
+        armOption.classList.remove('active');
+        statusIndicator.classList.remove('armed');
+        statusIndicator.classList.add('disarmed');
+        indicatorText.textContent = 'DISARMED';
+    }
 }
 
 // function to arm the system
 function arm() {
-    // Create AbortController for timeout
+    // Optimistic UI update - update immediately for instant feedback
+    updateUI(true);
+    
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+    const timeoutId = setTimeout(() => controller.abort(), 5000); // Reduced timeout
     
     fetch('/api/arm', {
         method: 'POST',
@@ -39,24 +59,28 @@ function arm() {
     })
     .then(data => { 
         console.log('System armed:', data);
+        // Sync with server (in case of any discrepancy)
         updateStatus();
     })
     .catch(error => {
         clearTimeout(timeoutId);
         console.error('Error arming system:', error);
-        if (error.name === 'AbortError') {
-            alert('Request timed out. Please try again.');
-        } else {
+        // Revert UI on error
+        updateUI(false);
+        updateStatus(); // Sync with actual server state
+        if (error.name !== 'AbortError') {
             alert('Failed to arm system: ' + error.message);
         }
     });
 }
 
 // function to disarm the system
-function stop() {
-    // Create AbortController for timeout
+function disarm() {
+    // Optimistic UI update - update immediately for instant feedback
+    updateUI(false);
+    
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+    const timeoutId = setTimeout(() => controller.abort(), 5000); // Reduced timeout
     
     fetch('/api/stop', {
         method: 'POST',
@@ -74,52 +98,22 @@ function stop() {
     })
     .then(data => {
         console.log('System disarmed:', data);
+        // Sync with server (in case of any discrepancy)
         updateStatus();
     })
     .catch(error => {
         clearTimeout(timeoutId);
         console.error('Error disarming system', error);
-        if (error.name === 'AbortError') {
-            alert('Request timed out. Please try again.');
-        } else {
+        // Revert UI on error
+        updateUI(true);
+        updateStatus(); // Sync with actual server state
+        if (error.name !== 'AbortError') {
             alert('Failed to disarm system: ' + error.message);
         }
     });
 }
 
-// function to test alarm
-function testAlarm() {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000);
-    
-    fetch('/api/test-alarm', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        signal: controller.signal
-    })
-    .then(response => {
-        clearTimeout(timeoutId);
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        return response.json();
-    })
-    .then(data => {
-        console.log('Test alarm:', data);
-        if (data.success) {
-            alert('Alarm test triggered! You should hear the alarm sound.');
-        } else {
-            alert('Alarm test failed. Check console for details.');
-        }
-    })
-    .catch(error => {
-        clearTimeout(timeoutId);
-        console.error('Error testing alarm:', error);
-        alert('Failed to test alarm: ' + error.message);
-    });
-}
-
+// Initialize on page load
 updateStatus();
-setInterval(updateStatus, 2000);
+// Reduce polling frequency to every 3 seconds (less frequent updates)
+setInterval(updateStatus, 3000);

@@ -325,23 +325,19 @@ def check_for_lid_close_event(log_lines):
         # Check for clamshell close events (various patterns)
         if 'clamshell' in line_lower:
             if any(keyword in line_lower for keyword in ['close', 'closed', 'closing']):
-                print(f"Detected clamshell close: {line[:100]}")
-                return True
-        # Check for sleep events (but not wake events)
-        if 'sleep' in line_lower:
-            if any(keyword in line_lower for keyword in ['requested', 'entering', 'will sleep', 'going to sleep', 'sleep request']):
-                if 'wake' not in line_lower and 'woke' not in line_lower and 'waking' not in line_lower:
-                    print(f"Detected sleep event: {line[:100]}")
+                if 'open' not in line_lower and 'wake' not in line_lower:
+                    print(f"Detected clamshell close: {line[:100]}")
                     return True
         # Check for display sleep (which happens when lid closes)
         if 'display' in line_lower and 'sleep' in line_lower:
             if 'wake' not in line_lower and 'woke' not in line_lower and 'waking' not in line_lower:
                 print(f"Detected display sleep: {line[:100]}")
-            return True
+                return True
         # Check for lid-related events
         if 'lid' in line_lower and ('close' in line_lower or 'closed' in line_lower):
-            print(f"Detected lid close: {line[:100]}")
-            return True
+            if 'open' not in line_lower and 'wake' not in line_lower:
+                print(f"Detected lid close: {line[:100]}")
+                return True
     return False
 
 def check_lid_state():
@@ -375,61 +371,30 @@ def check_lid_state():
 def power_monitor_loop():
     """Background thread that monitors power events"""
     global monitor_running, armed
-    last_seen_lines = set()
-    check_count = 0
     last_lid_state = None
-    alarm_triggered = False  # Track if alarm has been triggered for this lid close
+    initialized = False
 
     while monitor_running:
         try:
-            # First, try to check lid state directly (most reliable)
+            # Check lid state directly
             lid_state = check_lid_state()
+            
             if lid_state is not None:
-                # Detect transition from open to closed
-                if lid_state and (last_lid_state is False or last_lid_state is None) and armed and not alarm_triggered:
-                    print("=" * 60)
-                    print("LID CLOSE DETECTED (via ioreg) - TRIGGERING ALARM IMMEDIATELY")
-                    print("=" * 60)
-                    trigger_alarm()
-                    alarm_triggered = True
-                # Reset alarm_triggered when lid opens again
-                elif not lid_state and last_lid_state:
-                    print("Lid opened - resetting alarm trigger state")
-                    alarm_triggered = False
-                last_lid_state = lid_state
-            elif last_lid_state is None:
-                # First check - initialize state
-                if lid_state is not None:
+                # On first check after arming, initialize the lid state
+                # This ensures we only trigger on transitions AFTER arming
+                if not initialized:
+                    last_lid_state = lid_state
+                    initialized = True
+                    print(f"Monitoring initialized - lid is currently {'CLOSED' if lid_state else 'OPEN'}")
+                else:
+                    # Only trigger if lid transitions from OPEN to CLOSED
+                    # This ensures we only detect actual lid close events, not just the lid being closed
+                    if lid_state and last_lid_state is False and armed:
+                        print("LID CLOSE DETECTED - TRIGGERING ALARM")
+                        trigger_alarm()
                     last_lid_state = lid_state
             
-            # Also check pmset log for events (backup method)
-            log_lines = parse_pmset_log()
-            current_lines_set = set(log_lines)
-            
-            # Find new lines that weren't in the previous check
-            new_lines = current_lines_set - last_seen_lines
-            
-            if new_lines:
-                # Debug: log new lines occasionally
-                if check_count % 20 == 0:  # Every 10 seconds (0.5s * 20)
-                    print(f"Monitoring: {len(new_lines)} new log entries detected")
-                    # Show sample of new lines for debugging
-                    sample_lines = list(new_lines)[:3]
-                    for line in sample_lines:
-                        if any(keyword in line.lower() for keyword in ['clamshell', 'sleep', 'display', 'lid']):
-                            print(f"  Sample: {line[:80]}")
-                
-                # Check only the new lines for lid close events
-                if armed and not alarm_triggered and check_for_lid_close_event(list(new_lines)):
-                    print("LID CLOSE DETECTED (via pmset log) - TRIGGERING ALARM")
-                    trigger_alarm()
-                    alarm_triggered = True
-            
-            # Update last seen lines (keep only the most recent ones to avoid memory growth)
-            last_seen_lines = current_lines_set
-            check_count += 1
-
-            time.sleep(0.2)  # Check very frequently (5 times per second) for immediate detection
+            time.sleep(0.5)  # Check more frequently for better responsiveness
 
         except Exception as e:
             print(f"Error in power monitor loop: {e}")
@@ -442,6 +407,9 @@ def start_power_monitoring():
     global monitor_thread, monitor_running
 
     stop_power_monitoring()
+    
+    # Reset any alarm trigger state when starting fresh
+    print("Starting fresh power monitoring session")
 
     # Verify pmset command works (with shorter timeout to avoid blocking)
     try:
@@ -540,6 +508,10 @@ def stop():
         
         stop_alarm()
         stop_power_monitoring()
+        
+        # Reset alarm trigger state when disarming
+        print("System disarmed - resetting all detection states")
+        
         return jsonify({
             'status': 'disarmed',
             'armed': False
